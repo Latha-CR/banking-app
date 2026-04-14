@@ -1,26 +1,27 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+const express = require("express");
+const path = require("path");
 
 const app = express();
-app.use(cors());
+
+// Middleware
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected!'))
-  .catch(err => console.log(err));
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/accounts', require('./routes/accounts'));
-app.use('/api/transactions', require('./routes/transactions'));
-
-app.use(express.static('C:\\Users\\ceran\\Downloads\\banking-app\\frontend'));
-
-app.get('/{*path}', (req, res) => {
-  res.sendFile('C:\\Users\\ceran\\Downloads\\banking-app\\frontend\\index.html');
+// Route for homepage
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Example API route (optional)
+app.get("/api", (req, res) => {
+  res.json({ message: "API is working" });
+});
+
+// Start server
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
