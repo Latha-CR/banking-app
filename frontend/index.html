@@ -11,33 +11,48 @@
       align-items: center;
       height: 100vh;
     }
+
     .box {
       background: white;
       padding: 20px;
       border-radius: 10px;
-      width: 300px;
+      width: 320px;
       text-align: center;
     }
+
     input {
       width: 90%;
       padding: 10px;
       margin: 10px;
     }
+
     button {
       padding: 10px;
       width: 95%;
       background: purple;
       color: white;
       border: none;
+      margin-top: 10px;
     }
+
     .error {
       color: red;
+    }
+
+    .success {
+      color: green;
+    }
+
+    #dashboard {
+      display: none;
     }
   </style>
 </head>
 
 <body>
-  <div class="box">
+
+  <!-- LOGIN PAGE -->
+  <div class="box" id="loginBox">
     <h2>🏦 MVJ Bank</h2>
     <h3>Login</h3>
 
@@ -47,6 +62,18 @@
     <input type="password" id="password" placeholder="Password"><br>
 
     <button onclick="login()">Login</button>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="box" id="dashboard">
+    <h2>🏦 MVJ Bank</h2>
+    <h3>Dashboard</h3>
+
+    <p class="success">Login Successful 🎉</p>
+
+    <h4>Welcome, User!</h4>
+
+    <button onclick="logout()">Logout</button>
   </div>
 
   <script>
@@ -66,8 +93,12 @@
         const data = await res.json();
 
         if (res.ok) {
-          document.getElementById("msg").style.color = "green";
-          document.getElementById("msg").innerText = data.message;
+          // Hide login
+          document.getElementById("loginBox").style.display = "none";
+
+          // Show dashboard
+          document.getElementById("dashboard").style.display = "block";
+
         } else {
           document.getElementById("msg").innerText = data.message;
         }
@@ -76,6 +107,12 @@
         document.getElementById("msg").innerText = "Cannot connect to server!";
       }
     }
+
+    function logout() {
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("loginBox").style.display = "block";
+    }
   </script>
+
 </body>
 </html>
