@@ -1,22 +1,31 @@
 const express = require("express");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
-// Serve frontend static files
+// Serve frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// Route for homepage
+// Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-// Example API route (optional)
-app.get("/api", (req, res) => {
-  res.json({ message: "API is working" });
+// Sample login API
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+
+  // Dummy check (replace with DB later)
+  if (email === "cerangaswamy1@gmail.com" && password === "123456") {
+    return res.json({ message: "Login successful" });
+  } else {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
 });
 
 // Start server

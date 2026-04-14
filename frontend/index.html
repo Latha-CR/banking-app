@@ -1,379 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MVJ Banking App</title>
+  <title>MVJ Bank</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { background: #f0f4f8; min-height: 100vh; }
-    .hidden { display: none !important; }
-
-    .page {
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
     }
-
-    .card {
+    .box {
       background: white;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .card h1 { text-align: center; font-size: 2rem; }
-    .card h2 { text-align: center; color: #333; }
-
-    input {
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      width: 100%;
-    }
-
-    input:focus { outline: none; border-color: #4f46e5; }
-
-    button {
-      padding: 12px;
-      background: #4f46e5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    button:hover { background: #4338ca; }
-
-    .link {
-      color: #4f46e5;
-      cursor: pointer;
-      text-decoration: underline;
-      font-weight: bold;
-    }
-
-    .navbar {
-      background: #4f46e5;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .navbar button {
-      width: auto;
-      padding: 8px 16px;
-      background: white;
-      color: #4f46e5;
-      font-weight: bold;
-    }
-
-    .dashboard-body { background: #f0f4f8; min-height: 100vh; }
-
-    .container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .welcome-card {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: white;
-      padding: 2rem;
-      border-radius: 16px;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
       text-align: center;
     }
-
-    .welcome-card h1 { font-size: 3rem; margin: 1rem 0 0.5rem; color: white; }
-
-    .inner-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px;
     }
-
-    .transaction {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
+    button {
+      padding: 10px;
+      width: 95%;
+      background: purple;
+      color: white;
+      border: none;
     }
-
-    .transaction:last-child { border-bottom: none; }
-    .debit { color: #ef4444; font-weight: bold; }
-    .credit { color: #22c55e; font-weight: bold; }
-    .transaction-date { color: #999; font-size: 0.8rem; }
-
-    .msg-success { color: green; text-align: center; font-weight: bold; }
-    .msg-error { color: red; text-align: center; font-weight: bold; }
+    .error {
+      color: red;
+    }
   </style>
 </head>
+
 <body>
+  <div class="box">
+    <h2>🏦 MVJ Bank</h2>
+    <h3>Login</h3>
 
-  <!-- LOGIN PAGE -->
-  <div id="loginPage" class="page">
-    <div class="card">
-      <h1>🏦 MVJ Bank</h1>
-      <h2>Login</h2>
-      <div id="loginMsg"></div>
-      <input type="email" id="loginEmail" placeholder="Email" />
-      <input type="password" id="loginPassword" placeholder="Password" />
-      <button id="loginBtn" onclick="login()">Login</button>
-      <p style="text-align:center;">No account? <span class="link" id="goRegister">Register here</span></p>
-    </div>
-  </div>
+    <p id="msg" class="error"></p>
 
-  <!-- REGISTER PAGE -->
-  <div id="registerPage" class="page hidden">
-    <div class="card">
-      <h1>🏦 MVJ Bank</h1>
-      <h2>Register</h2>
-      <div id="registerMsg"></div>
-      <input type="text" id="regName" placeholder="Full Name" />
-      <input type="email" id="regEmail" placeholder="Email" />
-      <input type="password" id="regPassword" placeholder="Password" />
-      <button id="registerBtn" onclick="register()">Register</button>
-      <p style="text-align:center;">Have account? <span class="link" id="goLogin">Login here</span></p>
-    </div>
-  </div>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
 
-  <!-- DASHBOARD PAGE -->
-  <div id="dashboardPage" class="hidden">
-    <div class="navbar">
-      <h2>🏦 MVJ Bank</h2>
-      <button onclick="logout()">Logout</button>
-    </div>
-    <div class="container">
-      <div class="welcome-card">
-        <h2>Welcome, <span id="userName"></span>!</h2>
-        <p>Account Number: <b><span id="accountNumber"></span></b></p>
-        <h1>₹ <span id="balance">0</span></h1>
-        <p>Available Balance</p>
-      </div>
-
-      <div class="inner-card">
-        <h3>💸 Transfer Money</h3>
-        <div id="transferMsg"></div>
-        <input type="text" id="toAccount" placeholder="Recipient Account Number" />
-        <input type="number" id="transferAmount" placeholder="Amount (₹)" />
-        <input type="text" id="transferDesc" placeholder="Description" />
-        <button onclick="transfer()">Send Money</button>
-      </div>
-
-      <div class="inner-card">
-        <h3>📋 Transaction History</h3>
-        <div id="transactions"><p style="text-align:center;color:#999;">Loading...</p></div>
-      </div>
-    </div>
+    <button onclick="login()">Login</button>
   </div>
 
   <script>
-    const API = 'http://localhost:5000/api';
-
-    // Navigation
-    document.getElementById('goRegister').addEventListener('click', function() {
-      document.getElementById('loginPage').classList.add('hidden');
-      document.getElementById('registerPage').classList.remove('hidden');
-    });
-
-    document.getElementById('goLogin').addEventListener('click', function() {
-      document.getElementById('registerPage').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-    });
-
-    function showDashboard() {
-      document.getElementById('loginPage').classList.add('hidden');
-      document.getElementById('registerPage').classList.add('hidden');
-      document.getElementById('dashboardPage').classList.remove('hidden');
-    }
-
-    // Register
-    async function register() {
-      const fullName = document.getElementById('regName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value.trim();
-      const msg = document.getElementById('registerMsg');
-
-      if (!fullName || !email || !password) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Please fill all fields!';
-        return;
-      }
-
-      try {
-        const res = await fetch(API + '/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName, email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          msg.className = 'msg-success';
-          msg.textContent = 'Registration successful! Please login.';
-          setTimeout(() => {
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('loginPage').classList.remove('hidden');
-          }, 1500);
-        } else {
-          msg.className = 'msg-error';
-          msg.textContent = data.msg || 'Registration failed!';
-        }
-      } catch (err) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Cannot connect to server. Make sure backend is running!';
-      }
-    }
-
-    // Login
     async function login() {
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const msg = document.getElementById('loginMsg');
-
-      if (!email || !password) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Please fill all fields!';
-        return;
-      }
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
       try {
-        const res = await fetch(API + '/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ email, password })
         });
+
         const data = await res.json();
+
         if (res.ok) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          showDashboard();
-          loadDashboard();
+          document.getElementById("msg").style.color = "green";
+          document.getElementById("msg").innerText = data.message;
         } else {
-          msg.className = 'msg-error';
-          msg.textContent = data.msg || 'Login failed!';
-        }
-      } catch (err) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Cannot connect to server. Make sure backend is running!';
-      }
-    }
-
-    // Load Dashboard
-    async function loadDashboard() {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user'));
-      document.getElementById('userName').textContent = user.fullName;
-
-      try {
-        const accRes = await fetch(API + '/accounts', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const account = await accRes.json();
-        document.getElementById('accountNumber').textContent = account.accountNumber;
-        document.getElementById('balance').textContent = account.currentBalance.toLocaleString();
-
-        const txRes = await fetch(API + '/transactions', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const transactions = await txRes.json();
-        const txDiv = document.getElementById('transactions');
-
-        if (transactions.length === 0) {
-          txDiv.innerHTML = '<p style="text-align:center;color:#999;">No transactions yet</p>';
-          return;
+          document.getElementById("msg").innerText = data.message;
         }
 
-        txDiv.innerHTML = transactions.map(function(tx) {
-          return '<div class="transaction">' +
-            '<div>' +
-              '<div>' + (tx.description || 'Transfer') + '</div>' +
-              '<div class="transaction-date">' + new Date(tx.timeLogged).toLocaleString() + '</div>' +
-            '</div>' +
-            '<div class="' + (tx.movementType === 'DEBIT' ? 'debit' : 'credit') + '">' +
-              (tx.movementType === 'DEBIT' ? '-' : '+') + '₹' + tx.amount.toLocaleString() +
-            '</div>' +
-          '</div>';
-        }).join('');
       } catch (err) {
-        console.log('Dashboard load error:', err);
+        document.getElementById("msg").innerText = "Cannot connect to server!";
       }
     }
-
-    // Transfer
-    async function transfer() {
-      const token = localStorage.getItem('token');
-      const toAccountNumber = document.getElementById('toAccount').value.trim();
-      const amount = document.getElementById('transferAmount').value;
-      const description = document.getElementById('transferDesc').value.trim();
-      const msg = document.getElementById('transferMsg');
-
-      if (!toAccountNumber || !amount) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Please fill account number and amount!';
-        return;
-      }
-
-      try {
-        const res = await fetch(API + '/transactions/transfer', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-          },
-          body: JSON.stringify({ toAccountNumber, amount, description })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          msg.className = 'msg-success';
-          msg.textContent = 'Transfer successful!';
-          document.getElementById('toAccount').value = '';
-          document.getElementById('transferAmount').value = '';
-          document.getElementById('transferDesc').value = '';
-          loadDashboard();
-        } else {
-          msg.className = 'msg-error';
-          msg.textContent = data.msg || 'Transfer failed!';
-        }
-      } catch (err) {
-        msg.className = 'msg-error';
-        msg.textContent = 'Cannot connect to server!';
-      }
-    }
-
-    // Logout
-    function logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      document.getElementById('dashboardPage').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-    }
-
-    // Auto login if token exists
-    window.onload = function() {
-      const token = localStorage.getItem('token');
-      if (token) {
-        showDashboard();
-        loadDashboard();
-      }
-    };
   </script>
 </body>
 </html>
