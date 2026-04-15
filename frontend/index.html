@@ -17,7 +17,7 @@
     .phone {
       width: 360px;
       min-height: 100vh;
-      background: #fff;
+      background: white;
       border-radius: 25px;
       overflow-y: auto;
       box-shadow: 0 0 25px rgba(0,0,0,0.3);
@@ -45,18 +45,12 @@
       border-radius: 10px;
       margin-top: 10px;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #1e4f7a;
     }
 
     .header {
       background: linear-gradient(135deg, #0f2a44, #1e4f7a);
       color: white;
       padding: 20px;
-      text-align: center;
     }
 
     .card {
@@ -65,7 +59,6 @@
       border-radius: 15px;
       background: linear-gradient(135deg, #4facfe, #00f2fe);
       color: white;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
     .balance {
@@ -99,7 +92,6 @@
   <div id="loginBox" class="section">
     <h2>🏦 MVJ Bank</h2>
     <input id="loginEmail" placeholder="Email">
-    <input id="loginPassword" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
     <p><a href="#" onclick="showRegister()">Register</a></p>
   </div>
@@ -108,7 +100,6 @@
   <div id="registerBox" class="section">
     <h2>Register</h2>
     <input id="regEmail" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Password">
     <button onclick="register()">Register</button>
     <button onclick="showLogin()">Back</button>
   </div>
@@ -117,20 +108,19 @@
   <div id="dashboard">
 
     <div class="header">
-      <h2 id="welcomeUser">Welcome</h2>
+      <h2 id="welcomeUser"></h2>
     </div>
 
     <div class="card">
       <p>MVJ BANK</p>
-      <div class="balance">₹ <span id="balance">1000</span></div>
+      <div class="balance">₹ <span id="balance">0</span></div>
     </div>
 
     <div class="section">
       <h3>Send Money</h3>
-      <input id="receiver" placeholder="Receiver Email">
-      <input id="amount" placeholder="Amount">
+      <input id="receiverInput" placeholder="Receiver Email">
+      <input id="amountInput" placeholder="Amount">
       <button onclick="sendMoney()">Send</button>
-      <button onclick="receiveMoney()">Receive ₹500</button>
     </div>
 
     <div class="section">
@@ -147,9 +137,15 @@
 </div>
 
 <script>
-  let balance = 1000;
-  let transactions = [];
-  let users = ["cerangaswamy1@gmail.com"];
+
+  // USERS DATABASE (SIMULATION)
+  let users = {
+    "cerangaswamy1@gmail.com": {
+      balance: 1000,
+      transactions: []
+    }
+  };
+
   let currentUser = "";
 
   function showRegister(){
@@ -162,84 +158,100 @@
     loginBox.style.display="block";
   }
 
-  async function login(){
-    const email = loginEmail.value;
-    const password = loginPassword.value;
+  function login(){
+    let email = document.getElementById("loginEmail").value;
 
-    const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ email, password })
-    });
-
-    if(res.ok){
-      currentUser = email;
-      document.getElementById("welcomeUser").innerText = "Welcome " + email;
-
-      loginBox.style.display="none";
-      dashboard.style.display="block";
-    } else {
-      alert("Invalid login");
+    if(!users[email]){
+      alert("User not found");
+      return;
     }
+
+    currentUser = email;
+
+    document.getElementById("welcomeUser").innerText = "Welcome " + email;
+
+    loginBox.style.display="none";
+    dashboard.style.display="block";
+
+    loadDashboard();
   }
 
   function register(){
-    let email = regEmail.value;
+    let email = document.getElementById("regEmail").value;
 
-    if(users.includes(email)){
+    if(users[email]){
       alert("User already exists");
       return;
     }
 
-    users.push(email);
+    users[email] = {
+      balance: 1000,
+      transactions: []
+    };
+
     alert("Registered successfully");
     showLogin();
   }
 
+  function loadDashboard(){
+    document.getElementById("balance").innerText =
+      users[currentUser].balance;
+
+    updateHistory();
+  }
+
   function sendMoney(){
-    let receiver = document.getElementById("receiver").value;
-    let amt = parseInt(document.getElementById("amount").value);
+    let receiver = document.getElementById("receiverInput").value;
+    let amt = parseInt(document.getElementById("amountInput").value);
 
-    if (!receiver || !amt) {
-      alert("Fill all fields");
-      return;
-    }
-
-    if (!users.includes(receiver)) {
+    if(!users[receiver]){
       alert("Receiver not registered");
       return;
     }
 
-    if (amt > balance) {
+    if(users[currentUser].balance < amt){
       alert("Insufficient balance");
       return;
     }
 
-    balance -= amt;
-    document.getElementById("balance").innerText = balance;
-
     let date = new Date().toLocaleString();
 
-    transactions.unshift(`Sent ₹${amt} to ${receiver} (${date})`);
-    updateHistory();
-  }
+    // sender
+    users[currentUser].balance -= amt;
+    users[currentUser].transactions.unshift({
+      type:"debit",
+      to: receiver,
+      amount: amt,
+      date
+    });
 
-  function receiveMoney(){
-    balance += 500;
-    document.getElementById("balance").innerText = balance;
+    // receiver
+    users[receiver].balance += amt;
+    users[receiver].transactions.unshift({
+      type:"credit",
+      from: currentUser,
+      amount: amt,
+      date
+    });
 
-    let date = new Date().toLocaleString();
-
-    transactions.unshift(`Received ₹500 (${date})`);
-    updateHistory();
+    loadDashboard();
   }
 
   function updateHistory(){
     let list = document.getElementById("history");
     list.innerHTML="";
-    transactions.forEach(t=>{
+
+    users[currentUser].transactions.forEach(t=>{
       let li=document.createElement("li");
-      li.innerText=t;
+
+      if(t.type==="debit"){
+        li.innerHTML = `➡️ Sent ₹${t.amount} to ${t.to}<br>${t.date}`;
+        li.style.color="red";
+      } else {
+        li.innerHTML = `⬅️ Received ₹${t.amount} from ${t.from}<br>${t.date}`;
+        li.style.color="green";
+      }
+
       list.appendChild(li);
     });
   }
@@ -248,6 +260,7 @@
     dashboard.style.display="none";
     loginBox.style.display="block";
   }
+
 </script>
 
 </body>
