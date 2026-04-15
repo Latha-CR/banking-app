@@ -3,116 +3,126 @@
 <head>
   <title>MVJ Bank</title>
   <style>
-    body {
-      font-family: Arial;
-      background: #f2f2f2;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 320px;
-      text-align: center;
-    }
-
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px;
-    }
-
-    button {
-      padding: 10px;
-      width: 95%;
-      background: purple;
-      color: white;
-      border: none;
-      margin-top: 10px;
-    }
-
-    .error {
-      color: red;
-    }
-
-    .success {
-      color: green;
-    }
-
-    #dashboard {
-      display: none;
-    }
+    body { font-family: Arial; background:#f2f2f2; display:flex; justify-content:center; align-items:center; height:100vh;}
+    .box { background:white; padding:20px; border-radius:10px; width:320px; text-align:center;}
+    input { width:90%; padding:10px; margin:8px;}
+    button { width:95%; padding:10px; background:purple; color:white; border:none; margin-top:10px;}
+    #dashboard, #registerBox { display:none; }
   </style>
 </head>
 
 <body>
 
-  <!-- LOGIN PAGE -->
-  <div class="box" id="loginBox">
-    <h2>🏦 MVJ Bank</h2>
-    <h3>Login</h3>
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <h2>🏦 MVJ Bank</h2>
+  <h3>Login</h3>
+  <p id="msg"></p>
 
-    <p id="msg" class="error"></p>
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPassword" type="password" placeholder="Password">
 
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <p>New user? <a href="#" onclick="showRegister()">Register</a></p>
+</div>
 
-    <button onclick="login()">Login</button>
-  </div>
+<!-- REGISTER -->
+<div class="box" id="registerBox">
+  <h3>Register</h3>
+  <input id="regEmail" placeholder="Email">
+  <input id="regPassword" type="password" placeholder="Password">
 
-  <!-- DASHBOARD PAGE -->
-  <div class="box" id="dashboard">
-    <h2>🏦 MVJ Bank</h2>
-    <h3>Dashboard</h3>
+  <button onclick="register()">Register</button>
+  <button onclick="showLogin()">Back</button>
+</div>
 
-    <p class="success">Login Successful 🎉</p>
+<!-- DASHBOARD -->
+<div class="box" id="dashboard">
+  <h2>Dashboard</h2>
+  <p>Balance: ₹ <span id="balance">1000</span></p>
 
-    <h4>Welcome, User!</h4>
+  <h4>Send Money</h4>
+  <input id="amount" placeholder="Amount">
+  <button onclick="sendMoney()">Send</button>
 
-    <button onclick="logout()">Logout</button>
-  </div>
+  <h4>Transaction History</h4>
+  <ul id="history"></ul>
 
-  <script>
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+  <button onclick="logout()">Logout</button>
+</div>
 
-      try {
-        const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ email, password })
-        });
+<script>
+  let balance = 1000;
+  let transactions = [];
 
-        const data = await res.json();
+  function showRegister() {
+    loginBox.style.display = "none";
+    registerBox.style.display = "block";
+  }
 
-        if (res.ok) {
-          // Hide login
-          document.getElementById("loginBox").style.display = "none";
+  function showLogin() {
+    registerBox.style.display = "none";
+    loginBox.style.display = "block";
+  }
 
-          // Show dashboard
-          document.getElementById("dashboard").style.display = "block";
+  async function login() {
+    const email = loginEmail.value;
+    const password = loginPassword.value;
 
-        } else {
-          document.getElementById("msg").innerText = data.message;
-        }
+    try {
+      const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({email,password})
+      });
 
-      } catch (err) {
-        document.getElementById("msg").innerText = "Cannot connect to server!";
+      if(res.ok){
+        loginBox.style.display="none";
+        dashboard.style.display="block";
+      } else {
+        msg.innerText="Invalid login";
       }
+    } catch {
+      msg.innerText="Server error";
+    }
+  }
+
+  function register(){
+    alert("User Registered (Demo)");
+    showLogin();
+  }
+
+  function sendMoney(){
+    let amt = parseInt(amount.value);
+    if(amt > balance){
+      alert("Insufficient balance");
+      return;
     }
 
-    function logout() {
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-    }
-  </script>
+    balance -= amt;
+    document.getElementById("balance").innerText = balance;
+
+    transactions.push("Sent ₹"+amt);
+
+    updateHistory();
+  }
+
+  function updateHistory(){
+    let list = document.getElementById("history");
+    list.innerHTML = "";
+
+    transactions.forEach(t=>{
+      let li = document.createElement("li");
+      li.innerText = t;
+      list.appendChild(li);
+    });
+  }
+
+  function logout(){
+    dashboard.style.display="none";
+    loginBox.style.display="block";
+  }
+</script>
 
 </body>
 </html>
