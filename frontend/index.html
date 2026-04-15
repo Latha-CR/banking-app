@@ -2,98 +2,204 @@
 <html>
 <head>
   <title>MVJ Bank</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body { font-family: Arial; background:#f2f2f2; display:flex; justify-content:center; align-items:center; height:100vh;}
-    .box { background:white; padding:20px; border-radius:10px; width:320px; text-align:center;}
-    input { width:90%; padding:10px; margin:8px;}
-    button { width:95%; padding:10px; background:purple; color:white; border:none; margin-top:10px;}
-    #dashboard, #registerBox { display:none; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f2a44;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .phone {
+      width: 350px;
+      height: 650px;
+      background: white;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      background: #0f2a44;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .balance-card {
+      background: white;
+      margin: -20px 20px 20px;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .balance {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0f2a44;
+    }
+
+    .section {
+      padding: 15px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+    }
+
+    .action {
+      background: #f2f2f2;
+      padding: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .transactions {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .transactions li {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px;
+    }
+
+    button {
+      width: 90%;
+      padding: 10px;
+      background: #0f2a44;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+
+    #dashboard, #registerBox {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="box" id="loginBox">
-  <h2>🏦 MVJ Bank</h2>
-  <h3>Login</h3>
-  <p id="msg"></p>
+<div class="phone">
 
-  <input id="loginEmail" placeholder="Email">
-  <input id="loginPassword" type="password" placeholder="Password">
+  <!-- LOGIN -->
+  <div id="loginBox" class="section">
+    <h2>🏦 MVJ Bank</h2>
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p><a href="#" onclick="showRegister()">Register</a></p>
+  </div>
 
-  <button onclick="login()">Login</button>
-  <p>New user? <a href="#" onclick="showRegister()">Register</a></p>
-</div>
+  <!-- REGISTER -->
+  <div id="registerBox" class="section">
+    <h2>Register</h2>
+    <input id="regEmail" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <button onclick="showLogin()">Back</button>
+  </div>
 
-<!-- REGISTER -->
-<div class="box" id="registerBox">
-  <h3>Register</h3>
-  <input id="regEmail" placeholder="Email">
-  <input id="regPassword" type="password" placeholder="Password">
+  <!-- DASHBOARD -->
+  <div id="dashboard">
 
-  <button onclick="register()">Register</button>
-  <button onclick="showLogin()">Back</button>
-</div>
+    <div class="header">
+      <h2>Welcome User</h2>
+    </div>
 
-<!-- DASHBOARD -->
-<div class="box" id="dashboard">
-  <h2>Dashboard</h2>
-  <p>Balance: ₹ <span id="balance">1000</span></p>
+    <div class="balance-card">
+      <p>Balance</p>
+      <div class="balance">₹ <span id="balance">1000</span></div>
+    </div>
 
-  <h4>Send Money</h4>
-  <input id="amount" placeholder="Amount">
-  <button onclick="sendMoney()">Send</button>
+    <div class="section">
+      <h3>Send Money</h3>
+      <input id="amount" placeholder="Enter amount">
+      <button onclick="sendMoney()">Send</button>
+    </div>
 
-  <h4>Transaction History</h4>
-  <ul id="history"></ul>
+    <div class="section">
+      <h3>Quick Actions</h3>
+      <div class="actions">
+        <div class="action">💧 Water</div>
+        <div class="action">💡 Electricity</div>
+        <div class="action">🔥 Gas</div>
+        <div class="action">🛒 Shopping</div>
+        <div class="action">📱 Mobile</div>
+        <div class="action">💳 Card</div>
+      </div>
+    </div>
 
-  <button onclick="logout()">Logout</button>
+    <div class="section">
+      <h3>Transactions</h3>
+      <ul id="history" class="transactions"></ul>
+    </div>
+
+    <div class="section">
+      <button onclick="logout()">Logout</button>
+    </div>
+
+  </div>
+
 </div>
 
 <script>
   let balance = 1000;
   let transactions = [];
 
-  function showRegister() {
-    loginBox.style.display = "none";
-    registerBox.style.display = "block";
+  function showRegister(){
+    loginBox.style.display="none";
+    registerBox.style.display="block";
   }
 
-  function showLogin() {
-    registerBox.style.display = "none";
-    loginBox.style.display = "block";
+  function showLogin(){
+    registerBox.style.display="none";
+    loginBox.style.display="block";
   }
 
-  async function login() {
-    const email = loginEmail.value;
-    const password = loginPassword.value;
+  async function login(){
+    const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        email: loginEmail.value,
+        password: loginPassword.value
+      })
+    });
 
-    try {
-      const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({email,password})
-      });
-
-      if(res.ok){
-        loginBox.style.display="none";
-        dashboard.style.display="block";
-      } else {
-        msg.innerText="Invalid login";
-      }
-    } catch {
-      msg.innerText="Server error";
+    if(res.ok){
+      loginBox.style.display="none";
+      dashboard.style.display="block";
+    } else {
+      alert("Invalid login");
     }
   }
 
   function register(){
-    alert("User Registered (Demo)");
+    alert("Registered (demo)");
     showLogin();
   }
 
   function sendMoney(){
     let amt = parseInt(amount.value);
+
     if(amt > balance){
       alert("Insufficient balance");
       return;
@@ -102,18 +208,17 @@
     balance -= amt;
     document.getElementById("balance").innerText = balance;
 
-    transactions.push("Sent ₹"+amt);
+    transactions.unshift("Sent ₹"+amt);
 
     updateHistory();
   }
 
   function updateHistory(){
     let list = document.getElementById("history");
-    list.innerHTML = "";
-
+    list.innerHTML="";
     transactions.forEach(t=>{
-      let li = document.createElement("li");
-      li.innerText = t;
+      let li=document.createElement("li");
+      li.innerText=t;
       list.appendChild(li);
     });
   }
