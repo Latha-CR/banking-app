@@ -24,10 +24,31 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
 
+    .section {
+      padding: 20px;
+      text-align: center;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px;
+    }
+
+    button {
+      width: 90%;
+      padding: 10px;
+      background: #0f2a44;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
     .header {
       background: #0f2a44;
       color: white;
-      text-align: center;
       padding: 20px;
     }
 
@@ -46,47 +67,15 @@
       color: #0f2a44;
     }
 
-    .section {
-      padding: 15px;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      text-align: center;
-    }
-
-    .action {
-      background: #f2f2f2;
-      padding: 15px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
     .transactions {
       max-height: 150px;
       overflow-y: auto;
+      text-align: left;
     }
 
     .transactions li {
-      padding: 5px;
+      padding: 8px;
       border-bottom: 1px solid #eee;
-    }
-
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px;
-    }
-
-    button {
-      width: 90%;
-      padding: 10px;
-      background: #0f2a44;
-      color: white;
-      border: none;
-      border-radius: 8px;
     }
 
     #dashboard, #registerBox {
@@ -131,24 +120,14 @@
 
     <div class="section">
       <h3>Send Money</h3>
+      <input id="receiver" placeholder="Receiver Name / Email">
       <input id="amount" placeholder="Enter amount">
       <button onclick="sendMoney()">Send</button>
+      <button onclick="receiveMoney()">Receive ₹500</button>
     </div>
 
     <div class="section">
-      <h3>Quick Actions</h3>
-      <div class="actions">
-        <div class="action">💧 Water</div>
-        <div class="action">💡 Electricity</div>
-        <div class="action">🔥 Gas</div>
-        <div class="action">🛒 Shopping</div>
-        <div class="action">📱 Mobile</div>
-        <div class="action">💳 Card</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h3>Transactions</h3>
+      <h3>Transaction History</h3>
       <ul id="history" class="transactions"></ul>
     </div>
 
@@ -198,9 +177,20 @@
   }
 
   function sendMoney(){
-    let amt = parseInt(amount.value);
+    let receiver = document.getElementById("receiver").value;
+    let amt = parseInt(document.getElementById("amount").value);
 
-    if(amt > balance){
+    if (!receiver) {
+      alert("Enter receiver name");
+      return;
+    }
+
+    if (!amt || amt <= 0) {
+      alert("Enter valid amount");
+      return;
+    }
+
+    if (amt > balance) {
       alert("Insufficient balance");
       return;
     }
@@ -208,17 +198,49 @@
     balance -= amt;
     document.getElementById("balance").innerText = balance;
 
-    transactions.unshift("Sent ₹"+amt);
+    let date = new Date().toLocaleString();
 
+    transactions.unshift({
+      type: "debit",
+      to: receiver,
+      amount: amt,
+      date: date
+    });
+
+    updateHistory();
+  }
+
+  function receiveMoney(){
+    let amt = 500;
+    balance += amt;
+
+    let date = new Date().toLocaleString();
+
+    transactions.unshift({
+      type: "credit",
+      amount: amt,
+      date: date
+    });
+
+    document.getElementById("balance").innerText = balance;
     updateHistory();
   }
 
   function updateHistory(){
     let list = document.getElementById("history");
-    list.innerHTML="";
-    transactions.forEach(t=>{
-      let li=document.createElement("li");
-      li.innerText=t;
+    list.innerHTML = "";
+
+    transactions.forEach(t => {
+      let li = document.createElement("li");
+
+      if (t.type === "debit") {
+        li.innerHTML = `➡️ Sent ₹${t.amount} to <b>${t.to}</b><br><small>${t.date}</small>`;
+        li.style.color = "red";
+      } else {
+        li.innerHTML = `⬅️ Received ₹${t.amount}<br><small>${t.date}</small>`;
+        li.style.color = "green";
+      }
+
       list.appendChild(li);
     });
   }
