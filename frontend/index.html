@@ -8,7 +8,7 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #0f2a44;
+      background: linear-gradient(135deg, #0f2a44, #1e4f7a);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,12 +16,12 @@
     }
 
     .phone {
-      width: 350px;
-      height: 650px;
-      background: white;
+      width: 360px;
+      height: 680px;
+      background: #fff;
       border-radius: 25px;
       overflow: hidden;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
     }
 
     .section {
@@ -33,6 +33,8 @@
       width: 90%;
       padding: 10px;
       margin: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
 
     button {
@@ -41,36 +43,71 @@
       background: #0f2a44;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-top: 10px;
       cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #1e4f7a;
     }
 
     .header {
-      background: #0f2a44;
+      background: linear-gradient(135deg, #0f2a44, #1e4f7a);
       color: white;
       padding: 20px;
+      text-align: center;
     }
 
-    .balance-card {
-      background: white;
-      margin: -20px 20px 20px;
+    /* CARD */
+    .card {
+      margin: -30px 20px 20px;
       padding: 20px;
       border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: fadeIn 1s ease;
+    }
+
+    .card-number {
+      letter-spacing: 2px;
+      margin: 10px 0;
     }
 
     .balance {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
-      color: #0f2a44;
     }
 
+    /* ACTIONS */
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .action {
+      background: #f2f2f2;
+      padding: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .action:hover {
+      background: #ddd;
+      transform: scale(1.05);
+    }
+
+    /* TRANSACTIONS */
     .transactions {
       max-height: 150px;
       overflow-y: auto;
       text-align: left;
+      padding: 10px;
     }
 
     .transactions li {
@@ -80,6 +117,11 @@
 
     #dashboard, #registerBox {
       display: none;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0; transform:translateY(10px);}
+      to {opacity:1;}
     }
   </style>
 </head>
@@ -113,21 +155,35 @@
       <h2>Welcome User</h2>
     </div>
 
-    <div class="balance-card">
-      <p>Balance</p>
+    <!-- CARD -->
+    <div class="card">
+      <p>MVJ BANK</p>
+      <div class="card-number">**** **** **** 1234</div>
       <div class="balance">₹ <span id="balance">1000</span></div>
     </div>
 
+    <!-- SEND -->
     <div class="section">
       <h3>Send Money</h3>
-      <input id="receiver" placeholder="Receiver Name / Email">
-      <input id="amount" placeholder="Enter amount">
+      <input id="receiver" placeholder="Receiver">
+      <input id="amount" placeholder="Amount">
       <button onclick="sendMoney()">Send</button>
       <button onclick="receiveMoney()">Receive ₹500</button>
     </div>
 
+    <!-- ACTIONS -->
+    <div class="actions">
+      <div class="action">💡 Bills</div>
+      <div class="action">📱 Recharge</div>
+      <div class="action">🛒 Shop</div>
+      <div class="action">💳 Card</div>
+      <div class="action">🎁 Offers</div>
+      <div class="action">⚙️ Settings</div>
+    </div>
+
+    <!-- TRANSACTIONS -->
     <div class="section">
-      <h3>Transaction History</h3>
+      <h3>Transactions</h3>
       <ul id="history" class="transactions"></ul>
     </div>
 
@@ -180,67 +236,30 @@
     let receiver = document.getElementById("receiver").value;
     let amt = parseInt(document.getElementById("amount").value);
 
-    if (!receiver) {
-      alert("Enter receiver name");
-      return;
-    }
-
-    if (!amt || amt <= 0) {
-      alert("Enter valid amount");
-      return;
-    }
-
-    if (amt > balance) {
-      alert("Insufficient balance");
-      return;
-    }
+    if (!receiver || !amt) return alert("Fill all fields");
+    if (amt > balance) return alert("Insufficient balance");
 
     balance -= amt;
     document.getElementById("balance").innerText = balance;
 
-    let date = new Date().toLocaleString();
-
-    transactions.unshift({
-      type: "debit",
-      to: receiver,
-      amount: amt,
-      date: date
-    });
-
+    transactions.unshift(`Sent ₹${amt} to ${receiver} (${new Date().toLocaleTimeString()})`);
     updateHistory();
   }
 
   function receiveMoney(){
-    let amt = 500;
-    balance += amt;
-
-    let date = new Date().toLocaleString();
-
-    transactions.unshift({
-      type: "credit",
-      amount: amt,
-      date: date
-    });
-
+    balance += 500;
     document.getElementById("balance").innerText = balance;
+
+    transactions.unshift(`Received ₹500 (${new Date().toLocaleTimeString()})`);
     updateHistory();
   }
 
   function updateHistory(){
     let list = document.getElementById("history");
-    list.innerHTML = "";
-
-    transactions.forEach(t => {
-      let li = document.createElement("li");
-
-      if (t.type === "debit") {
-        li.innerHTML = `➡️ Sent ₹${t.amount} to <b>${t.to}</b><br><small>${t.date}</small>`;
-        li.style.color = "red";
-      } else {
-        li.innerHTML = `⬅️ Received ₹${t.amount}<br><small>${t.date}</small>`;
-        li.style.color = "green";
-      }
-
+    list.innerHTML="";
+    transactions.forEach(t=>{
+      let li=document.createElement("li");
+      li.innerText=t;
       list.appendChild(li);
     });
   }
