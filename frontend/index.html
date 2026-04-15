@@ -11,16 +11,15 @@
       background: linear-gradient(135deg, #0f2a44, #1e4f7a);
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
     }
 
     .phone {
       width: 360px;
-      height: 680px;
+      min-height: 100vh;
       background: #fff;
       border-radius: 25px;
-      overflow: hidden;
+      overflow-y: auto;
       box-shadow: 0 0 25px rgba(0,0,0,0.3);
     }
 
@@ -60,7 +59,6 @@
       text-align: center;
     }
 
-    /* CARD */
     .card {
       margin: -30px 20px 20px;
       padding: 20px;
@@ -68,12 +66,6 @@
       background: linear-gradient(135deg, #4facfe, #00f2fe);
       color: white;
       box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      animation: fadeIn 1s ease;
-    }
-
-    .card-number {
-      letter-spacing: 2px;
-      margin: 10px 0;
     }
 
     .balance {
@@ -81,30 +73,8 @@
       font-weight: bold;
     }
 
-    /* ACTIONS */
-    .actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      padding: 10px;
-    }
-
-    .action {
-      background: #f2f2f2;
-      padding: 15px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .action:hover {
-      background: #ddd;
-      transform: scale(1.05);
-    }
-
-    /* TRANSACTIONS */
     .transactions {
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: auto;
       text-align: left;
       padding: 10px;
@@ -117,11 +87,6 @@
 
     #dashboard, #registerBox {
       display: none;
-    }
-
-    @keyframes fadeIn {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1;}
     }
   </style>
 </head>
@@ -152,36 +117,22 @@
   <div id="dashboard">
 
     <div class="header">
-      <h2>Welcome User</h2>
+      <h2 id="welcomeUser">Welcome</h2>
     </div>
 
-    <!-- CARD -->
     <div class="card">
       <p>MVJ BANK</p>
-      <div class="card-number">**** **** **** 1234</div>
       <div class="balance">₹ <span id="balance">1000</span></div>
     </div>
 
-    <!-- SEND -->
     <div class="section">
       <h3>Send Money</h3>
-      <input id="receiver" placeholder="Receiver">
+      <input id="receiver" placeholder="Receiver Email">
       <input id="amount" placeholder="Amount">
       <button onclick="sendMoney()">Send</button>
       <button onclick="receiveMoney()">Receive ₹500</button>
     </div>
 
-    <!-- ACTIONS -->
-    <div class="actions">
-      <div class="action">💡 Bills</div>
-      <div class="action">📱 Recharge</div>
-      <div class="action">🛒 Shop</div>
-      <div class="action">💳 Card</div>
-      <div class="action">🎁 Offers</div>
-      <div class="action">⚙️ Settings</div>
-    </div>
-
-    <!-- TRANSACTIONS -->
     <div class="section">
       <h3>Transactions</h3>
       <ul id="history" class="transactions"></ul>
@@ -198,6 +149,8 @@
 <script>
   let balance = 1000;
   let transactions = [];
+  let users = ["cerangaswamy1@gmail.com"];
+  let currentUser = "";
 
   function showRegister(){
     loginBox.style.display="none";
@@ -210,16 +163,19 @@
   }
 
   async function login(){
+    const email = loginEmail.value;
+    const password = loginPassword.value;
+
     const res = await fetch("https://banking-app-6dvk.onrender.com/api/login", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        email: loginEmail.value,
-        password: loginPassword.value
-      })
+      body: JSON.stringify({ email, password })
     });
 
     if(res.ok){
+      currentUser = email;
+      document.getElementById("welcomeUser").innerText = "Welcome " + email;
+
       loginBox.style.display="none";
       dashboard.style.display="block";
     } else {
@@ -228,7 +184,15 @@
   }
 
   function register(){
-    alert("Registered (demo)");
+    let email = regEmail.value;
+
+    if(users.includes(email)){
+      alert("User already exists");
+      return;
+    }
+
+    users.push(email);
+    alert("Registered successfully");
     showLogin();
   }
 
@@ -236,13 +200,27 @@
     let receiver = document.getElementById("receiver").value;
     let amt = parseInt(document.getElementById("amount").value);
 
-    if (!receiver || !amt) return alert("Fill all fields");
-    if (amt > balance) return alert("Insufficient balance");
+    if (!receiver || !amt) {
+      alert("Fill all fields");
+      return;
+    }
+
+    if (!users.includes(receiver)) {
+      alert("Receiver not registered");
+      return;
+    }
+
+    if (amt > balance) {
+      alert("Insufficient balance");
+      return;
+    }
 
     balance -= amt;
     document.getElementById("balance").innerText = balance;
 
-    transactions.unshift(`Sent ₹${amt} to ${receiver} (${new Date().toLocaleTimeString()})`);
+    let date = new Date().toLocaleString();
+
+    transactions.unshift(`Sent ₹${amt} to ${receiver} (${date})`);
     updateHistory();
   }
 
@@ -250,7 +228,9 @@
     balance += 500;
     document.getElementById("balance").innerText = balance;
 
-    transactions.unshift(`Received ₹500 (${new Date().toLocaleTimeString()})`);
+    let date = new Date().toLocaleString();
+
+    transactions.unshift(`Received ₹500 (${date})`);
     updateHistory();
   }
 
