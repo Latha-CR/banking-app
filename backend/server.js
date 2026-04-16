@@ -7,16 +7,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Dummy login API (for demo)
+// TEST API
 app.post("/api/login", (req, res) => {
   res.json({ message: "Login success" });
 });
 
-// Serve frontend
+// SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// Default route
-app.get("*", (req, res) => {
+// FIXED ROUTE (NO ERROR)
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
