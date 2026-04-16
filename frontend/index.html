@@ -11,20 +11,39 @@
       background: linear-gradient(135deg, #0f2a44, #1e4f7a);
       display: flex;
       justify-content: center;
-      align-items: flex-start;
     }
 
     .phone {
       width: 360px;
       min-height: 100vh;
-      background: white;
-      border-radius: 25px;
-      overflow-y: auto;
-      box-shadow: 0 0 25px rgba(0,0,0,0.3);
+      background: #f5f7fa;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f2a44, #1e4f7a);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      margin: -30px 20px 20px;
+      padding: 20px;
+      border-radius: 15px;
+      color: white;
+    }
+
+    .balance {
+      font-size: 22px;
+      font-weight: bold;
     }
 
     .section {
-      padding: 20px;
+      padding: 15px;
       text-align: center;
     }
 
@@ -44,41 +63,31 @@
       border: none;
       border-radius: 10px;
       margin-top: 10px;
-      cursor: pointer;
     }
 
-    .header {
-      background: linear-gradient(135deg, #0f2a44, #1e4f7a);
-      color: white;
-      padding: 20px;
-    }
-
-    .card {
-      margin: -30px 20px 20px;
-      padding: 20px;
-      border-radius: 15px;
-      background: linear-gradient(135deg, #4facfe, #00f2fe);
-      color: white;
-    }
-
-    .balance {
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .transactions {
-      max-height: 200px;
-      overflow-y: auto;
+    ul {
       text-align: left;
       padding: 10px;
     }
 
-    .transactions li {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
+    .nav {
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-top: 1px solid #ddd;
+      position: fixed;
+      bottom: 0;
+      width: 360px;
+      padding: 10px 0;
     }
 
-    #dashboard, #registerBox {
+    .nav div {
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .hidden {
       display: none;
     }
   </style>
@@ -93,174 +102,159 @@
     <h2>🏦 MVJ Bank</h2>
     <input id="loginEmail" placeholder="Email">
     <button onclick="login()">Login</button>
-    <p><a href="#" onclick="showRegister()">Register</a></p>
+    <p onclick="showPage('registerBox')">Register</p>
   </div>
 
   <!-- REGISTER -->
-  <div id="registerBox" class="section">
-    <h2>Register</h2>
+  <div id="registerBox" class="section hidden">
+    <h2>Create Account</h2>
     <input id="regEmail" placeholder="Email">
     <button onclick="register()">Register</button>
-    <button onclick="showLogin()">Back</button>
+    <button onclick="showPage('loginBox')">Back</button>
   </div>
 
   <!-- DASHBOARD -->
-  <div id="dashboard">
-
+  <div id="dashboard" class="hidden">
     <div class="header">
-      <h2 id="welcomeUser"></h2>
+      <h2 id="userName"></h2>
     </div>
 
     <div class="card">
       <p>MVJ BANK</p>
       <div class="balance">₹ <span id="balance">0</span></div>
     </div>
+  </div>
 
-    <div class="section">
-      <h3>Send Money</h3>
-      <input id="receiverInput" placeholder="Receiver Email">
-      <input id="amountInput" placeholder="Amount">
-      <button onclick="sendMoney()">Send</button>
-    </div>
+  <!-- TRANSFER -->
+  <div id="transferPage" class="section hidden">
+    <h3>💸 Transfer Money</h3>
+    <input id="receiver" placeholder="Receiver Email">
+    <input id="amount" placeholder="Amount">
+    <button onclick="sendMoney()">Send</button>
+  </div>
 
-    <div class="section">
-      <h3>Transactions</h3>
-      <ul id="history" class="transactions"></ul>
-    </div>
+  <!-- RECIPIENTS -->
+  <div id="recipientsPage" class="section hidden">
+    <h3>👥 Recipients</h3>
+    <ul id="recipientsList"></ul>
+  </div>
 
-    <div class="section">
-      <button onclick="logout()">Logout</button>
-    </div>
+  <!-- HISTORY -->
+  <div id="historyPage" class="section hidden">
+    <h3>📜 Transactions</h3>
+    <ul id="historyList"></ul>
+  </div>
 
+  <!-- NOTIFICATIONS -->
+  <div id="notificationPage" class="section hidden">
+    <h3>🔔 Notifications</h3>
+    <ul id="notificationList"></ul>
+  </div>
+
+  <!-- NAV -->
+  <div id="navBar" class="nav hidden">
+    <div onclick="showPage('dashboard')">🏠<br>Home</div>
+    <div onclick="showPage('transferPage')">💸<br>Send</div>
+    <div onclick="showPage('recipientsPage')">👥<br>People</div>
+    <div onclick="showPage('historyPage')">📜<br>History</div>
+    <div onclick="showPage('notificationPage')">🔔<br>Alerts</div>
   </div>
 
 </div>
 
 <script>
+let users = {};
+let currentUser = "";
+let notifications = [];
 
-  // USERS DATABASE (SIMULATION)
-  let users = {
-    "cerangaswamy1@gmail.com": {
-      balance: 1000,
-      transactions: []
-    }
-  };
+function showPage(page){
+  document.querySelectorAll(".phone > div").forEach(div=>{
+    if(div.id !== "navBar") div.classList.add("hidden");
+  });
+  document.getElementById(page).classList.remove("hidden");
+}
 
-  let currentUser = "";
+async function login(){
+  let email = loginEmail.value;
 
-  function showRegister(){
-    loginBox.style.display="none";
-    registerBox.style.display="block";
+  await fetch("/api/login", {method:"POST"});
+
+  if(!users[email]) return alert("User not found");
+
+  currentUser = email;
+  userName.innerText = "Welcome " + email;
+
+  navBar.classList.remove("hidden");
+
+  loadDashboard();
+  showPage("dashboard");
+}
+
+function register(){
+  let email = regEmail.value;
+
+  users[email] = {balance:1000, transactions:[], recipients:[]};
+
+  alert("Registered");
+  showPage("loginBox");
+}
+
+function loadDashboard(){
+  balance.innerText = users[currentUser].balance;
+  updateHistory();
+  updateRecipients();
+  updateNotifications();
+}
+
+function sendMoney(){
+  let r = receiver.value;
+  let amt = parseInt(amount.value);
+
+  if(!users[r]) return alert("Receiver not found");
+  if(users[currentUser].balance < amt) return alert("Insufficient");
+
+  users[currentUser].balance -= amt;
+  users[r].balance += amt;
+
+  let msg = `Sent ₹${amt} to ${r}`;
+
+  users[currentUser].transactions.unshift(msg);
+
+  if(!users[currentUser].recipients.includes(r)){
+    users[currentUser].recipients.push(r);
   }
 
-  function showLogin(){
-    registerBox.style.display="none";
-    loginBox.style.display="block";
-  }
+  notifications.unshift(msg);
 
-  function login(){
-    let email = document.getElementById("loginEmail").value;
+  loadDashboard();
+}
 
-    if(!users[email]){
-      alert("User not found");
-      return;
-    }
+function updateHistory(){
+  historyList.innerHTML="";
+  users[currentUser].transactions.forEach(t=>{
+    let li=document.createElement("li");
+    li.innerText=t;
+    historyList.appendChild(li);
+  });
+}
 
-    currentUser = email;
+function updateRecipients(){
+  recipientsList.innerHTML="";
+  users[currentUser].recipients.forEach(r=>{
+    let li=document.createElement("li");
+    li.innerText=r;
+    recipientsList.appendChild(li);
+  });
+}
 
-    document.getElementById("welcomeUser").innerText = "Welcome " + email;
-
-    loginBox.style.display="none";
-    dashboard.style.display="block";
-
-    loadDashboard();
-  }
-
-  function register(){
-    let email = document.getElementById("regEmail").value;
-
-    if(users[email]){
-      alert("User already exists");
-      return;
-    }
-
-    users[email] = {
-      balance: 1000,
-      transactions: []
-    };
-
-    alert("Registered successfully");
-    showLogin();
-  }
-
-  function loadDashboard(){
-    document.getElementById("balance").innerText =
-      users[currentUser].balance;
-
-    updateHistory();
-  }
-
-  function sendMoney(){
-    let receiver = document.getElementById("receiverInput").value;
-    let amt = parseInt(document.getElementById("amountInput").value);
-
-    if(!users[receiver]){
-      alert("Receiver not registered");
-      return;
-    }
-
-    if(users[currentUser].balance < amt){
-      alert("Insufficient balance");
-      return;
-    }
-
-    let date = new Date().toLocaleString();
-
-    // sender
-    users[currentUser].balance -= amt;
-    users[currentUser].transactions.unshift({
-      type:"debit",
-      to: receiver,
-      amount: amt,
-      date
-    });
-
-    // receiver
-    users[receiver].balance += amt;
-    users[receiver].transactions.unshift({
-      type:"credit",
-      from: currentUser,
-      amount: amt,
-      date
-    });
-
-    loadDashboard();
-  }
-
-  function updateHistory(){
-    let list = document.getElementById("history");
-    list.innerHTML="";
-
-    users[currentUser].transactions.forEach(t=>{
-      let li=document.createElement("li");
-
-      if(t.type==="debit"){
-        li.innerHTML = `➡️ Sent ₹${t.amount} to ${t.to}<br>${t.date}`;
-        li.style.color="red";
-      } else {
-        li.innerHTML = `⬅️ Received ₹${t.amount} from ${t.from}<br>${t.date}`;
-        li.style.color="green";
-      }
-
-      list.appendChild(li);
-    });
-  }
-
-  function logout(){
-    dashboard.style.display="none";
-    loginBox.style.display="block";
-  }
-
+function updateNotifications(){
+  notificationList.innerHTML="";
+  notifications.forEach(n=>{
+    let li=document.createElement("li");
+    li.innerText=n;
+    notificationList.appendChild(li);
+  });
+}
 </script>
 
 </body>
