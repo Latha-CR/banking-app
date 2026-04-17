@@ -1,46 +1,54 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const Transaction = require('../models/Transaction');
 const Account = require('../models/Account');
-const auth = require('../middleware/auth');
 
-// Get all transactions
 router.get('/', auth, async (req, res) => {
   try {
     const account = await Account.findOne({ userId: req.user.id });
-    const transactions = await Transaction.find({ accountId: account._id }).sort({ timeLogged: -1 });
+    const transactions = await Transaction.find({ fromAccountId: account._id });
     res.json(transactions);
   } catch (err) {
     res.status(500).json({ msg: 'Server error' });
   }
 });
 
-// Transfer money
 router.post('/transfer', auth, async (req, res) => {
   try {
     const { toAccountNumber, amount, description } = req.body;
     const fromAccount = await Account.findOne({ userId: req.user.id });
+    
+    if (!fromAccount) {
+      return res.status(404).json({ msg: 'Your account not found' });
+    }
 
-    if (fromAccount.currentBalance < amount)
+    if (fromAccount.currentBalance < amount) {
       return res.status(400).json({ msg: 'Insufficient balance' });
+    }
 
     const toAccount = await Account.findOne({ accountNumber: toAccountNumber });
-    if (!toAccount) return res.status(400).json({ msg: 'Recipient account not found' });
+    if (!toAccount) {
+      return res.status(404).json({ msg: 'Recipient account not found' });
+    }
 
     fromAccount.currentBalance -= amount;
-    fromAccount.availableBalance -= amount;
+    toAccount.currentBalance += amount;
     await fromAccount.save();
-
-    toAccount.currentBalance += Number(amount);
-    toAccount.availableBalance += Number(amount);
     await toAccount.save();
 
-    await Transaction.create({ accountId: fromAccount._id, amount, movementType: 'DEBIT', description });
-    await Transaction.create({ accountId: toAccount._id, amount, movementType: 'CREDIT', description });
+    const transaction = new Transaction({
+      fromAccountId: fromAccount._id,
+      toAccountNumber,
+      amount,
+      description,
+      movementType: 'DEBIT'
+    });
+    await transaction.save();
 
     res.json({ msg: 'Transfer successful' });
   } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({ msg: 'Server error', error: err.message });
   }
 });
 

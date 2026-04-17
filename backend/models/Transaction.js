@@ -1,12 +1,51 @@
-const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const Transaction = require('../models/Transaction');
+const Account = require('../models/Account');
 
-const transactionSchema = new mongoose.Schema({
-  accountId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
-  amount: { type: Number, required: true },
-  movementType: { type: String, enum: ['DEBIT', 'CREDIT'], required: true },
-  description: { type: String },
-  timeLogged: { type: Date, default: Date.now },
-  state: { type: String, default: 'SUCCESS' }
+router.get('/', auth, async (req, res) => {
+  try {
+    const account = await Account.findOne({ userId: req.user.id });
+    const transactions = await Transaction.find({ fromAccountId: account._id });
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
 });
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+router.post('/transfer', auth, async (req, res) => {
+  try {
+    const { toAccountNumber, amount, description } = req.body;
+    const fromAccount = await Account.findOne({ userId: req.user.id });
+    
+    if (fromAccount.currentBalance < amount) {
+      return res.status(400).json({ msg: 'Insufficient balance' });
+    }
+
+    const toAccount = await Account.findOne({ accountNumber: toAccountNumber });
+    if (!toAccount) {
+      return res.status(404).json({ msg: 'Recipient account not found' });
+    }
+
+    fromAccount.currentBalance -= amount;
+    toAccount.currentBalance += amount;
+    await fromAccount.save();
+    await toAccount.save();
+
+    const transaction = new Transaction({
+      fromAccountId: fromAccount._id,
+      toAccountNumber,
+      amount,
+      description,
+      movementType: 'DEBIT'
+    });
+    await transaction.save();
+
+    res.json({ msg: 'Transfer successful' });
+  } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+module.exports = router;

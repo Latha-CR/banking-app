@@ -78,8 +78,6 @@
       font-weight: bold;
     }
 
-    .dashboard-body { background: #f0f4f8; min-height: 100vh; }
-
     .container {
       max-width: 800px;
       margin: 2rem auto;
@@ -122,8 +120,8 @@
     .credit { color: #22c55e; font-weight: bold; }
     .transaction-date { color: #999; font-size: 0.8rem; }
 
-    .msg-success { color: green; text-align: center; font-weight: bold; }
-    .msg-error { color: red; text-align: center; font-weight: bold; }
+    .msg-success { color: green; text-align: center; font-weight: bold; padding: 8px; }
+    .msg-error { color: red; text-align: center; font-weight: bold; padding: 8px; }
   </style>
 </head>
 <body>
@@ -136,8 +134,8 @@
       <div id="loginMsg"></div>
       <input type="email" id="loginEmail" placeholder="Email" />
       <input type="password" id="loginPassword" placeholder="Password" />
-      <button id="loginBtn" onclick="login()">Login</button>
-      <p style="text-align:center;">No account? <span class="link" id="goRegister">Register here</span></p>
+      <button onclick="login()">Login</button>
+      <p style="text-align:center;">No account? <span class="link" onclick="goRegister()">Register here</span></p>
     </div>
   </div>
 
@@ -150,8 +148,8 @@
       <input type="text" id="regName" placeholder="Full Name" />
       <input type="email" id="regEmail" placeholder="Email" />
       <input type="password" id="regPassword" placeholder="Password" />
-      <button id="registerBtn" onclick="register()">Register</button>
-      <p style="text-align:center;">Have account? <span class="link" id="goLogin">Login here</span></p>
+      <button onclick="register()">Register</button>
+      <p style="text-align:center;">Have account? <span class="link" onclick="goLogin()">Login here</span></p>
     </div>
   </div>
 
@@ -180,7 +178,7 @@
 
       <div class="inner-card">
         <h3>📋 Transaction History</h3>
-        <div id="transactions"><p style="text-align:center;color:#999;">Loading...</p></div>
+        <div id="transactions"><p style="text-align:center;color:#999;">No transactions yet</p></div>
       </div>
     </div>
   </div>
@@ -188,16 +186,15 @@
   <script>
     const API = 'http://localhost:5000/api';
 
-    // Navigation
-    document.getElementById('goRegister').addEventListener('click', function() {
+    function goRegister() {
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('registerPage').classList.remove('hidden');
-    });
+    }
 
-    document.getElementById('goLogin').addEventListener('click', function() {
+    function goLogin() {
       document.getElementById('registerPage').classList.add('hidden');
       document.getElementById('loginPage').classList.remove('hidden');
-    });
+    }
 
     function showDashboard() {
       document.getElementById('loginPage').classList.add('hidden');
@@ -205,7 +202,6 @@
       document.getElementById('dashboardPage').classList.remove('hidden');
     }
 
-    // Register
     async function register() {
       const fullName = document.getElementById('regName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
@@ -227,10 +223,10 @@
         const data = await res.json();
         if (res.ok) {
           msg.className = 'msg-success';
-          msg.textContent = 'Registration successful! Please login.';
+          msg.textContent = 'Registration successful! Redirecting to login...';
           setTimeout(() => {
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('loginPage').classList.remove('hidden');
+            goLogin();
+            msg.textContent = '';
           }, 1500);
         } else {
           msg.className = 'msg-error';
@@ -238,11 +234,10 @@
         }
       } catch (err) {
         msg.className = 'msg-error';
-        msg.textContent = 'Cannot connect to server. Make sure backend is running!';
+        msg.textContent = 'Cannot connect to server!';
       }
     }
 
-    // Login
     async function login() {
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
@@ -272,11 +267,10 @@
         }
       } catch (err) {
         msg.className = 'msg-error';
-        msg.textContent = 'Cannot connect to server. Make sure backend is running!';
+        msg.textContent = 'Cannot connect to server!';
       }
     }
 
-    // Load Dashboard
     async function loadDashboard() {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user'));
@@ -296,33 +290,28 @@
         const transactions = await txRes.json();
         const txDiv = document.getElementById('transactions');
 
-        if (transactions.length === 0) {
+        if (!transactions || transactions.length === 0) {
           txDiv.innerHTML = '<p style="text-align:center;color:#999;">No transactions yet</p>';
           return;
         }
 
         txDiv.innerHTML = transactions.map(function(tx) {
           return '<div class="transaction">' +
-            '<div>' +
-              '<div>' + (tx.description || 'Transfer') + '</div>' +
-              '<div class="transaction-date">' + new Date(tx.timeLogged).toLocaleString() + '</div>' +
-            '</div>' +
+            '<div><div>' + (tx.description || 'Transfer') + '</div>' +
+            '<div class="transaction-date">' + new Date(tx.timeLogged).toLocaleString() + '</div></div>' +
             '<div class="' + (tx.movementType === 'DEBIT' ? 'debit' : 'credit') + '">' +
-              (tx.movementType === 'DEBIT' ? '-' : '+') + '₹' + tx.amount.toLocaleString() +
-            '</div>' +
-          '</div>';
+            (tx.movementType === 'DEBIT' ? '-' : '+') + '₹' + tx.amount.toLocaleString() + '</div></div>';
         }).join('');
       } catch (err) {
-        console.log('Dashboard load error:', err);
+        console.error('Dashboard error:', err);
       }
     }
 
-    // Transfer
     async function transfer() {
       const token = localStorage.getItem('token');
       const toAccountNumber = document.getElementById('toAccount').value.trim();
       const amount = document.getElementById('transferAmount').value;
-      const description = document.getElementById('transferDesc').value.trim();
+      const description = document.getElementById('transferDesc').value.trim() || 'Transfer';
       const msg = document.getElementById('transferMsg');
 
       if (!toAccountNumber || !amount) {
@@ -338,7 +327,7 @@
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: JSON.stringify({ toAccountNumber, amount, description })
+          body: JSON.stringify({ toAccountNumber, amount: parseFloat(amount), description })
         });
         const data = await res.json();
         if (res.ok) {
@@ -347,10 +336,11 @@
           document.getElementById('toAccount').value = '';
           document.getElementById('transferAmount').value = '';
           document.getElementById('transferDesc').value = '';
-          loadDashboard();
+          setTimeout(() => { msg.textContent = ''; loadDashboard(); }, 1500);
         } else {
           msg.className = 'msg-error';
           msg.textContent = data.msg || 'Transfer failed!';
+          setTimeout(() => { msg.textContent = ''; }, 3000);
         }
       } catch (err) {
         msg.className = 'msg-error';
@@ -358,15 +348,15 @@
       }
     }
 
-    // Logout
     function logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       document.getElementById('dashboardPage').classList.add('hidden');
       document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
     }
 
-    // Auto login if token exists
     window.onload = function() {
       const token = localStorage.getItem('token');
       if (token) {
